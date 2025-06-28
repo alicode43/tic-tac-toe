@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import "./App.css";
 
-type PlayerSymbol = "X" | "O" | null;
+type Signs = "X" | "O" | null;
 type GameStatus = "playing" | "winner" | "draw";
 
 interface Player {
@@ -10,10 +10,10 @@ interface Player {
 }
 
 interface game {
-  board: PlayerSymbol[][];
+  board: Signs[][];
   currentPlayer: "X" | "O";
   status: GameStatus;
-  winner: PlayerSymbol;
+  winner: Signs;
 }
 
 function App() {
@@ -27,7 +27,7 @@ function App() {
   const [game, setgame] = useState<game>(() => stState(boardSize));
 
   function stState(size: number): game {
-    const board: PlayerSymbol[][] = Array(size)
+    const board: Signs[][] = Array(size)
       .fill(null)
       .map(() => Array(size).fill(null));
     return {
@@ -40,10 +40,10 @@ function App() {
 
   const checkWinner = useCallback(
     (
-      board: PlayerSymbol[][],
+      board: Signs[][],
       row: number,
       col: number,
-      player: PlayerSymbol
+      player: Signs
     ): boolean => {
       const size = board.length;
       const directions = [
@@ -102,7 +102,7 @@ function App() {
     [marksToWin]
   );
 
-  const checkDraw = useCallback((board: PlayerSymbol[][]): boolean => {
+  function checkDraw(board: Signs[][]): boolean {
     for (let row = 0; row < board.length; row++) {
       for (let col = 0; col < board[row].length; col++) {
         if (board[row][col] === null) {
@@ -111,64 +111,61 @@ function App() {
       }
     }
     return true;
-  }, []);
+  }
 
-  const onBoxClick = useCallback(
-    (row: number, col: number) => {
-      if (game.status !== "playing" || game.board[row][col] !== null) {
-        return;
+  function onBoxClick(row: number, col: number) {
+    if (game.status !== "playing" || game.board[row][col] !== null) {
+      return;
+    }
+
+    // Create a deep copy of the board using traditional for loops
+    const newBoard: Signs[][] = [];
+    for (let i = 0; i < game.board.length; i++) {
+      const newRow: Signs[] = [];
+      for (let j = 0; j < game.board[i].length; j++) {
+        newRow[j] = game.board[i][j];
       }
+      newBoard[i] = newRow;
+    }
 
-      // Create a deep copy of the board using traditional for loops
-      const newBoard: PlayerSymbol[][] = [];
-      for (let i = 0; i < game.board.length; i++) {
-        const newRow: PlayerSymbol[] = [];
-        for (let j = 0; j < game.board[i].length; j++) {
-          newRow[j] = game.board[i][j];
-        }
-        newBoard[i] = newRow;
-      }
+    newBoard[row][col] = game.currentPlayer;
 
-      newBoard[row][col] = game.currentPlayer;
+    const hasWinner = checkWinner(newBoard, row, col, game.currentPlayer);
+    let isDraw = false;
+    if (!hasWinner) {
+      isDraw = checkDraw(newBoard);
+    }
 
-      const hasWinner = checkWinner(newBoard, row, col, game.currentPlayer);
-      let isDraw = false;
-      if (!hasWinner) {
-        isDraw = checkDraw(newBoard);
-      }
+    let newCurrentPlayer: "X" | "O";
+    if (game.currentPlayer === "X") {
+      newCurrentPlayer = "O";
+    } else {
+      newCurrentPlayer = "X";
+    }
 
-      let newCurrentPlayer: "X" | "O";
-      if (game.currentPlayer === "X") {
-        newCurrentPlayer = "O";
-      } else {
-        newCurrentPlayer = "X";
-      }
+    let newStatus: GameStatus;
+    if (hasWinner) {
+      newStatus = "winner";
+    } else if (isDraw) {
+      newStatus = "draw";
+    } else {
+      newStatus = "playing";
+    }
 
-      let newStatus: GameStatus;
-      if (hasWinner) {
-        newStatus = "winner";
-      } else if (isDraw) {
-        newStatus = "draw";
-      } else {
-        newStatus = "playing";
-      }
+    let newWinner: Signs;
+    if (hasWinner) {
+      newWinner = game.currentPlayer;
+    } else {
+      newWinner = null;
+    }
 
-      let newWinner: PlayerSymbol;
-      if (hasWinner) {
-        newWinner = game.currentPlayer;
-      } else {
-        newWinner = null;
-      }
-
-      setgame({
-        board: newBoard,
-        currentPlayer: newCurrentPlayer,
-        status: newStatus,
-        winner: newWinner,
-      });
-    },
-    [game, checkWinner, checkDraw]
-  );
+    setgame({
+      board: newBoard,
+      currentPlayer: newCurrentPlayer,
+      status: newStatus,
+      winner: newWinner,
+    });
+  }
 
   function resetGame() {
     setgame(stState(boardSize));
@@ -274,7 +271,7 @@ function App() {
               value={players[0].name}
               onChange={(e) =>
                 setPlayers((prev) => [
-                  { ...prev[0], name: e.tar.value || "Player 1" },
+                  { ...prev[0], name: e.target.value || "Player 1" },
                   prev[1],
                 ])
               }
@@ -290,7 +287,7 @@ function App() {
               onChange={(e) =>
                 setPlayers((prev) => [
                   prev[0],
-                  { ...prev[1], name: e.tar.value || "Player 2" },
+                  { ...prev[1], name: e.target.value || "Player 2" },
                 ])
               }
               placeholder="Enter Player 2 name"
@@ -307,7 +304,7 @@ function App() {
             type="number"
             min="3"
             value={boardSize}
-            onChange={(e) => onSizeChange(parseInt(e.tar.value) || 3)}
+            onChange={(e) => onSizeChange(parseInt(e.target.value) || 3)}
           />
         </div>
         <div className="setting">
@@ -318,7 +315,7 @@ function App() {
             min="3"
             max={boardSize}
             value={marksToWin}
-            onChange={(e) => checkMarks(parseInt(e.tar.value) || 3)}
+            onChange={(e) => checkMarks(parseInt(e.target.value) || 3)}
           />
         </div>
       </div>
