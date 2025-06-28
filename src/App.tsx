@@ -258,9 +258,17 @@ function App() {
 
   return (
     <div className="app">
+ 
+              <div className="background">
+    <div className="circle circle1"></div>
+    <div className="circle circle2"></div>
+    <div className="circle circle3"></div>
+    <div className="circle circle4"></div>
+  </div>
       <h1>Tic-Tac-Toe Pro</h1>
 
       <div className="player-setup">
+
         <h3>Player Setup</h3>
         <div className="player-inputs">
           <div className="player-input">
@@ -364,6 +372,7 @@ function App() {
           <p>Marks to win: {marksToWin}</p>
         </div>
       </div>
+              
     </div>
   );
 }
